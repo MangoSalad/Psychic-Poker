@@ -13,5 +13,8 @@ int main()
 
     game game_session(file.get_input());
     game_session.show_input();
+    game_session.calculate_best_hand();
+
+    game_session.show_output();
 
 }
