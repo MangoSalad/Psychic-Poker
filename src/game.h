@@ -12,10 +12,24 @@ public:
     // Constructor for loading input.
     game(std::vector<std::vector<std::string> > a_input);
 
+    //debugging functions
+    void show_input();
+
+
+
 private:
 
-    m_input;
+    std::vector<std::vector<std::string> > m_input;
+    
+    // Player hands.
+    std::vector<std::vector<std::string> >m_hand;
+
+    // Player deck.
+    std::vector<std::vector<std::string> > m_deck;
     //recommendations
+
+
+    
 
 };
 
