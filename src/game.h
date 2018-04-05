@@ -22,7 +22,10 @@ public:
 
 private:
 
-    typedef std::pair<char,char> hand;
+    // <0> : rank
+    // <1> : suit
+    // <2> : deck card or hand card
+    typedef std::tuple<char,char,std::string> hand;
 
     // Available choices for best hands.
     const std::string STRAIGHT_FLUSH = "straight-flush";
@@ -34,6 +37,10 @@ private:
     const std::string TWO_PAIRS = "two-pairs";
     const std::string ONE_PAIR = "one-pair";
     const std::string HIGHEST_CARD = "highest-card";
+
+    // Hand Card, Deck Card
+    const std::string HAND_CARD = "hand";
+    const std::string DECK_CARD = "deck";
 
     std::vector<std::vector<hand> > m_input;
 
@@ -66,6 +73,8 @@ private:
     static bool compare_rank(const hand &one, const hand &two);
 
     bool is_sequential(const char a, const char b);
+
+    bool is_valid_final_hand(const std::vector<hand> final_hand, std::stack<int> suit_stack);
 };
 
 #endif

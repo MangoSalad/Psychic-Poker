@@ -18,6 +18,9 @@
         "type_traits": "cpp",
         "utility": "cpp",
         "memory": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "queue": "cpp",
+        "stack": "cpp",
+        "bitset": "cpp"
     }
 }
