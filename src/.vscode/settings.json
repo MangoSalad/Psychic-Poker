@@ -28,6 +28,10 @@
         "limits": "cpp",
         "ratio": "cpp",
         "__tree": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "atomic": "cpp",
+        "system_error": "cpp",
+        "iosfwd": "cpp",
+        "locale": "cpp"
     }
 }

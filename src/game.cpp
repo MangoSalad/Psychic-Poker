@@ -22,7 +22,7 @@ game::game(std::vector<std::vector<std::string> > a_input)
     // Assign a_input to m_input.
     for(int i=0; i<a_input.size(); i++)
     {
-        m_input[i].resize(a_input.size());
+        m_input[i].resize(10);
         
         for(int j=0; j<a_input[0].size(); j++)
         {
@@ -60,7 +60,7 @@ void game::show_input()
  */
 void game::show_output()
 {
-    for(int i=0; i<m_input.size(); i++)
+    for(int i=0; i<m_input.size()-1; i++)
     {
         for(int j=0; j<m_input[0].size(); j++)
         {
@@ -130,6 +130,71 @@ void game::calculate_best_hand()
  */
 bool game::is_full_house(std::vector<hand> cards)
 {
+    std::vector<hand> original_cards = cards;
+
+    // Iterators for going through hand and deck cards.
+    iter hand_ptr = cards.begin();
+    iter deck_ptr = cards.begin()+5;
+
+    // Number of cards with the same rank.
+    int num_same_rank=0;
+    std::stack<hand> order_of_cards;
+
+    // Iterate through entire hand and deck.
+    while(deck_ptr != cards.end()+1)
+    {
+        // Sort cards in rank order.
+        std::sort(cards.begin(),deck_ptr,compare_rank);
+
+        // Iterate through the current set of cards.
+        for(int  i = 2; i <= std::distance(cards.begin(),deck_ptr); i++)
+        {
+            // If there are 4 cards with the same rank.
+            if(order_of_cards.size()==5)
+            {
+                int max_index=0;
+                int count_hand_cards =0;
+
+                while(!order_of_cards.empty())
+                {
+                    int pos = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),order_of_cards.top()));
+                    if(max_index < pos) max_index = pos;
+                    if(pos < 5) count_hand_cards++;
+                    order_of_cards.pop();
+                }
+                // std::cout<<(max_index-4) + count_hand_cards<<std::endl;
+
+                // if(5-max_index-4 != count_hand_cards)
+                // {
+                //     return false;
+                // }
+                if((max_index-4) + count_hand_cards == 5)
+                {
+                    return true;
+                }
+            }
+            
+            if( (std::get<0>(cards[i]) == std::get<0>(cards[i-1]) && 
+                std::get<0>(cards[i]) == std::get<0>(cards[i-2]) ) &&
+                (order_of_cards.empty() || std::get<0>(cards[i]) != std::get<0>(order_of_cards.top()) ))
+
+            {
+                order_of_cards.push(cards[i]);
+                order_of_cards.push(cards[i-1]);
+                order_of_cards.push(cards[i-2]);
+            }
+
+            else if( (std::get<0>(cards[i]) == std::get<0>(cards[i-1])) &&
+                (order_of_cards.empty() || std::get<0>(cards[i]) != std::get<0>(order_of_cards.top())))
+            {
+                order_of_cards.push(cards[i]);
+                order_of_cards.push(cards[i-1]);
+            }
+        }
+        // Empty the stacks.
+        while(!order_of_cards.empty()) order_of_cards.pop();
+        deck_ptr++;
+    }
     return false;
 }
 
@@ -232,11 +297,13 @@ bool game::is_straight(std::vector<hand> cards)
                 while(!sequential_cards.empty())
                 {
                     int pos = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),sequential_cards.top()));
+                    std::cout << std::get<0>(sequential_cards.top()) << std::get<1>(sequential_cards.top()) << " ";
                     if(max_index < pos) max_index = pos;
                     if(min_index > pos) min_index = pos; 
                     if(pos < 5) count_hand_cards++;
                     sequential_cards.pop();
                 }
+                std::cout<<std::endl;
 
                 if((max_index-4) + count_hand_cards == 5)
                 {
@@ -438,57 +505,52 @@ bool game::is_four_of_a_kind(std::vector<hand> cards)
 
     // Number of cards with the same rank.
     int num_same_rank=0;
-    std::stack<int> order_of_cards;
+    std::stack<hand> order_of_cards;
 
     // Iterate through entire hand and deck.
     while(deck_ptr != cards.end()+1)
     {
         // Sort cards in rank order.
         std::sort(cards.begin(),deck_ptr,compare_rank);
-        num_same_rank=0;
 
         // Iterate through the current set of cards.
-        for(int  i = 1; i <= std::distance(cards.begin(),deck_ptr); i++)
+        for(int  i = 3; i <= std::distance(cards.begin(),deck_ptr); i++)
         {
             // If there are 4 cards with the same rank.
-            if(num_same_rank==4)
+            if(order_of_cards.size()==4)
             {
-                // Add kicker card.
-                if(order_of_cards.size()==4)
-                {
-                    if(i>=6)
-                    {
-                        order_of_cards.push(i);
-                    }
-                    else
-                    {
-                        for(int j = 0; j <= i; j++)
-                        {
-                            if(std::get<0>(cards[j])!=std::get<0>(cards[j-1]) && std::get<2>(cards[j])==HAND_CARD)
-                            {
-                                order_of_cards.push(j);
-                                break;
-                            } 
-                        }
-                    }
-                }
+                int max_index=0;
+                int count_hand_cards =0;
 
-                for(int  i = 0; i <= std::distance(cards.begin(),deck_ptr); i++)
+                while(!order_of_cards.empty())
                 {
-                    std::cout << std::get<0>(cards[i]) << std::get<1>(cards[i]) << " ";
+                    int pos = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),order_of_cards.top()));
+                    // std::cout << std::get<0>(order_of_cards.top()) << std::get<1>(order_of_cards.top()) << " ";
+                    if(max_index < pos) max_index = pos;
+                    if(pos < 5) count_hand_cards++;
+                    order_of_cards.pop();
                 }
-                std::cout<<std::endl;
-                
-                if(is_valid_final_hand(cards,order_of_cards,original_cards))
-                { 
+                // std::cout<<std::endl;
+                // std::cout<<(max_index-4) + count_hand_cards<<std::endl;
+
+                // if(5-max_index-4 != count_hand_cards)
+                // {
+                //     return false;
+                // }
+                if((max_index-4) + count_hand_cards == 5)
+                {
                     return true;
                 }
             }
             
-            if(std::get<0>(cards[i]) == std::get<0>(cards[i-1]))
+            if( std::get<0>(cards[i]) == std::get<0>(cards[i-1]) && 
+                std::get<0>(cards[i]) == std::get<0>(cards[i-2]) &&
+                std::get<0>(cards[i]) == std::get<0>(cards[i-3]))
             {
-                order_of_cards.push(i);
-                num_same_rank++;
+                order_of_cards.push(cards[i]);
+                order_of_cards.push(cards[i-1]);
+                order_of_cards.push(cards[i-2]);
+                order_of_cards.push(cards[i-3]);
             }
         }
         // Empty the stacks.
@@ -668,7 +730,7 @@ bool game::is_valid_sequential_stack(const std::vector<hand> final_hand, std::st
  */
 bool game::is_sequential(const char a, const char b)
 {
-    if(a=='A') return false;
+    if(a=='A' && b == 'K') return true;
     else if(a=='K' && b=='A') return true;
     else if(a=='Q' && b=='K') return true;
     else if(a=='J' && b=='Q') return true;
@@ -678,7 +740,11 @@ bool game::is_sequential(const char a, const char b)
     {
         try
         {
-            if( (b-'0') - (a-'0') == 1)
+            if(isalpha(a) || isalpha(b))
+            {
+                return false;
+            }
+            else if( (b-'0') - (a-'0') == 1)
             {
                 return true;
             }

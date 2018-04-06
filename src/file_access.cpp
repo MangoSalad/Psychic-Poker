@@ -1,7 +1,14 @@
 #include "file_access.h"
 
+/**
+ * @brief Responsible for loading a file, checking the serialization, and saving the input object.
+ * 
+ * @return true 
+ * @return false 
+ */
 bool file_access::load_file()
 {
+    // Ifstream to read file.
     std::ifstream in_file;
     std::string buff;
     std::vector<std::string> file_contents;
@@ -10,6 +17,7 @@ bool file_access::load_file()
     // Try openning file.
     in_file.open(m_file_name);
 
+    // If file cannot be opened, let the user know.
     if(!in_file)
     {
         std::cout << "Cannot access file." << std::endl;
@@ -21,6 +29,7 @@ bool file_access::load_file()
     {
         getline(in_file, buff);
         std::istringstream line(buff);
+        std::cout<<buff<<std::endl;
 
         while(line)
         {
@@ -34,34 +43,33 @@ bool file_access::load_file()
         num_file_lines++;
     }
 
-    // Resize 2d matrix.
-    m_input.resize(num_file_lines);
-    for(int i = 0; i < num_file_lines; i ++)
-    {
-        m_input[i].resize(num_file_lines);
-    }
+    
+    // Reserve space for 2d matrix.
+    m_input.resize(num_file_lines,std::vector<std::string>(10));
+
 
     // Create 2d matrix from input.
     try
     {
-        for(int i = 0; i < file_contents.size(); i++)
+        for( int i = 0; i < num_file_lines-1; i++)
         { 
-            // Check that valid card is given.
-            if( is_valid_input(file_contents[i]) )
+            for(int j = 0; j < 10; j++)
             {
-                int row = i/num_file_lines;
-                int column =  i%num_file_lines;
-                m_input[row][column] = file_contents[i];                
-            }
-            else
-            {
-                throw;
-            } 
+                // Check that the card is a valid card.
+                if( is_valid_input(file_contents[j+i*10]) )
+                {
+                    m_input[i][j]=file_contents[j+i*10];   
+                }
+                else
+                {
+                    throw std::string("Invalid card included in file. Please check your file.");
+                } 
+            }            
         };
     }
-    catch(std::exception &e)
+    catch(std::string &e)
     {
-        std::cout << "Invalid file format. Please check your file. " << std::endl;
+        std::cout << e << std::endl;
         return false;
     }
 
@@ -128,6 +136,11 @@ bool file_access::is_valid_input(std::string a_input)
     return true;
 }
 
+/**
+ * @brief Selector for input.
+ * 
+ * @return const std::vector<std::vector<std::string> > 
+ */
 const std::vector<std::vector<std::string> > file_access::get_input()
 {
     return m_input;

@@ -10,10 +10,10 @@ public:
     // Default constructor.
     file_access(std::string a_file_name) : m_file_name(a_file_name) {};
 
-    // Manages serialization - loads hands from file.
+    // Manages serialization - loads card hands from file.
     bool load_file();
 
-    // Gets 2d matrix of game hands.
+    // Selector for 2d matrix of card hands.
     const std::vector<std::vector<std::string> > get_input();
 
 private:    

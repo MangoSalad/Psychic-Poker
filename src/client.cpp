@@ -9,7 +9,10 @@
 int main()
 {
     file_access file("game.txt");
-    file.load_file();
+    if(!file.load_file())
+    {
+        return EXIT_FAILURE;
+    }
 
     game game_session(file.get_input());
     game_session.show_input();
@@ -17,4 +20,5 @@ int main()
 
     game_session.show_output();
 
+    return EXIT_SUCCESS;
 }
