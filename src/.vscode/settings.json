@@ -21,6 +21,11 @@
         "algorithm": "cpp",
         "queue": "cpp",
         "stack": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "__locale": "cpp",
+        "ios": "cpp",
+        "chrono": "cpp",
+        "limits": "cpp",
+        "ratio": "cpp"
     }
 }

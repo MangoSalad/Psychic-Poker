@@ -26,6 +26,7 @@ private:
     // <1> : suit
     // <2> : deck card or hand card
     typedef std::tuple<char,char,std::string> hand;
+    typedef std::vector<hand>::iterator iter;
 
     // Available choices for best hands.
     const std::string STRAIGHT_FLUSH = "straight-flush";
@@ -71,10 +72,12 @@ private:
 
     // Utility functions.
     static bool compare_rank(const hand &one, const hand &two);
+    static bool compare_suit(const hand &one, const hand &two);
 
     bool is_sequential(const char a, const char b);
 
-    bool is_valid_final_hand(const std::vector<hand> final_hand, std::stack<int> suit_stack);
+    bool is_valid_final_hand(const std::vector<hand> final_hand, std::stack<int> suit_stack, const std::vector<hand> original_cards);
+    bool is_valid_sequential_stack(const std::vector<hand> final_hand, std::stack<int> suit_stack);
 };
 
 #endif
