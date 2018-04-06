@@ -2,7 +2,7 @@
 #include "file_access.h"
 #include "game.h"
 
-// To compile: g++ client.cpp game.cpp file_access.cpp -o game
+// To compile: g++ client.cpp game.cpp file_access.cpp -o game -std=c++14
 // https://github.com/btccom/Hire/blob/master/exercise/psychic-poker-en.md
 
 // Client Code.

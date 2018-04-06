@@ -1,10 +1,19 @@
 #include "game.h"
 
+/**
+ * @brief Construct a new game::game object
+ * 
+ */
 game::game()
 {
 
 };
 
+/**
+ * @brief Construct a new game::game object
+ * 
+ * @param a_input 
+ */
 game::game(std::vector<std::vector<std::string> > a_input)
 {
     // Size local variable appropriately.
@@ -29,6 +38,10 @@ game::game(std::vector<std::vector<std::string> > a_input)
     }
 };
 
+/**
+ * @brief Debugging function that shows the input.
+ * 
+ */
 void game::show_input()
 {
     for(int i=0; i<m_input.size(); i++)
@@ -41,6 +54,10 @@ void game::show_input()
     }
 };
 
+/**
+ * @brief Shows the output to the user.
+ * 
+ */
 void game::show_output()
 {
     for(int i=0; i<m_input.size(); i++)
@@ -53,7 +70,10 @@ void game::show_output()
     }
 };
 
-
+/**
+ * @brief For each hand, checks the best available hand that can be played.
+ * 
+ */
 void game::calculate_best_hand()
 {
     m_best_hand.resize(m_input.size());
@@ -101,27 +121,84 @@ void game::calculate_best_hand()
     }
 }
 
+/**
+ * @brief Checks if the hand is a full house hand.
+ * 
+ * @param cards 
+ * @return true 
+ * @return false 
+ */
+bool game::is_full_house(std::vector<hand> cards)
+{
+    return false;
+}
+
+/**
+ * @brief Checks if the hand is a flush hand.
+ * 
+ * @param cards 
+ * @return true 
+ * @return false 
+ */
 bool game::is_flush(std::vector<hand> cards)
 {
     std::vector<hand> original_cards = cards;
-    
+
     // Iterators for going through hand and deck cards.
-    std::vector<hand>::iterator hand_ptr = cards.begin();
-    std::vector<hand>::iterator deck_ptr = cards.begin()+5;
+    iter hand_ptr = cards.begin();
+    iter deck_ptr = cards.begin()+5;
+
+    std::stack<hand> same_suit;
 
     // Iterate through entire hand and deck.
     while(deck_ptr != cards.end()+1)
     {
-        // Sort cards in suit order.
-        std::sort(cards.begin(),deck_ptr,compare_rank);
-        
+        // Sort cards in rank order.
+        std::sort(cards.begin(),deck_ptr,compare_suit);
+
         // Iterate through the current set of cards.
-        for(int  i = 0; i <= std::distance(cards.begin(),deck_ptr); i++)
+        for(int  i = 1; i <= std::distance(cards.begin(),deck_ptr); i++)
         {
-            //TODO ADD
+            if(same_suit.size()==5)
+            {
+                int max_index=0;
+                int min_index=9;
+                int count_hand_cards =0;
+
+                while(!same_suit.empty())
+                {
+                    int pos = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),same_suit.top()));
+                    if(max_index < pos) max_index = pos;
+                    if(min_index > pos) min_index = pos; 
+                    if(pos < 5) count_hand_cards++;
+                    same_suit.pop();
+                }
+
+                if((max_index-4) + count_hand_cards == 5)
+                {
+                    return true;
+                }
+
+            }
+            
+            if(std::get<1>(cards[i]) == std::get<1>(cards[i-1]))
+            {
+                if(same_suit.empty())
+                {
+                    same_suit.push(cards[i-1]);
+                }
+                same_suit.push(cards[i]);
+            }
+            else if(!same_suit.empty())
+            {
+                while(!same_suit.empty()) same_suit.pop();
+            }
         }
 
+        // Empty the stacks.
+        while(!same_suit.empty()) same_suit.pop();
         deck_ptr++;
+
     }
     return false;
 };
@@ -129,46 +206,58 @@ bool game::is_flush(std::vector<hand> cards)
 bool game::is_straight(std::vector<hand> cards)
 {
     std::vector<hand> original_cards = cards;
-    
-    std::set<char> set_of_cards;
-    std::stack<int> order_of_cards;
-    
+
     // Iterators for going through hand and deck cards.
     iter hand_ptr = cards.begin();
     iter deck_ptr = cards.begin()+5;
+
+    std::stack<hand> sequential_cards;
 
     // Iterate through entire hand and deck.
     while(deck_ptr != cards.end()+1)
     {
         // Sort cards in rank order.
         std::sort(cards.begin(),deck_ptr,compare_rank);
-        
+        sequential_cards.push(cards[0]);
+
         // Iterate through the current set of cards.
-        for(int  i = 0; i <= std::distance(cards.begin(),deck_ptr); i++)
+        for(int  i = 1; i <= std::distance(cards.begin(),deck_ptr); i++)
         {
-            if(set_of_cards.size()>=5)
+            if(sequential_cards.size()==5)
             {
-                //std::sort(set_of_cards.begin(),set_of_cards.end(),compare_rank);
-                
+                int max_index=0;
+                int min_index=9;
+                int count_hand_cards =0;
 
-                if(is_valid_sequential_stack(cards,order_of_cards))
+                while(!sequential_cards.empty())
                 {
-                    if(is_valid_final_hand(cards,order_of_cards,original_cards))
-                    {
-                        return true;
-                    }
+                    int pos = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),sequential_cards.top()));
+                    if(max_index < pos) max_index = pos;
+                    if(min_index > pos) min_index = pos; 
+                    if(pos < 5) count_hand_cards++;
+                    sequential_cards.pop();
                 }
-            }
 
-            if(std::find(set_of_cards.begin(),set_of_cards.end(),std::get<0>(cards[i]))==set_of_cards.end())
-            {
-                set_of_cards.insert(std::get<0>(cards[i]));
-                order_of_cards.push(i);
+                if((max_index-4) + count_hand_cards == 5)
+                {
+                    return true;
+                }
+
             }
-            //TODO ADD
+            
+            if(is_sequential(std::get<0>(cards[i-1]),std::get<0>(cards[i])))
+            {
+                if(sequential_cards.empty())
+                {
+                    sequential_cards.push(cards[i-1]);
+                }
+                sequential_cards.push(cards[i]);
+            }
         }
-        while(!order_of_cards.empty()) order_of_cards.pop();
+        // Empty the stacks.
+        while(!sequential_cards.empty()) sequential_cards.pop();
         deck_ptr++;
+
     }
     return false;
 };
@@ -181,8 +270,7 @@ bool game::is_three_of_a_kind(std::vector<hand> cards)
     iter hand_ptr = cards.begin();
     iter deck_ptr = cards.begin()+5;
 
-    std::stack<int> order_of_cards;
-    int num_pairs = 0;
+    std::stack<hand> pairs;
 
     // Iterate through entire hand and deck.
     while(deck_ptr != cards.end()+1)
@@ -191,44 +279,40 @@ bool game::is_three_of_a_kind(std::vector<hand> cards)
         std::sort(cards.begin(),deck_ptr,compare_rank);
 
         // Iterate through the current set of cards.
-        for(int  i = 1; i <= std::distance(cards.begin(),deck_ptr); i++)
+        for(int  i = 2; i <= std::distance(cards.begin(),deck_ptr); i++)
         {
-            if(num_pairs==2)
+            if(pairs.size()==3)
             {
-                // Add kicker cards.
-                if(order_of_cards.size()==4)
+                int max_index=0;
+                int min_index=9;
+                int count_hand_cards =0;
+
+                while(!pairs.empty())
                 {
-                    if(i>=6)
-                    {
-                        order_of_cards.push(i);
-                    }
-                    else
-                    {
-                        for(int j = 0; j <= 5; j++)
-                        {
-                            if(std::get<0>(cards[j])!=std::get<0>(cards[i]) && std::get<2>(cards[j])==HAND_CARD)
-                            {
-                                order_of_cards.push(j);
-                            } 
-                        }
-                    }
+                    int pos = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),pairs.top()));
+                    if(max_index < pos) max_index = pos;
+                    if(min_index > pos) min_index = pos; 
+                    if(pos < 5) count_hand_cards++;
+                    pairs.pop();
                 }
-                
-                if(is_valid_final_hand(cards,order_of_cards,original_cards))
-                { 
+
+                if((max_index-4) + count_hand_cards == 5)
+                {
                     return true;
-                }   
+                }
+
             }
-            if(std::get<0>(cards[i]) == std::get<0>(cards[i-1]))
+            
+            if(std::get<0>(cards[i]) == std::get<0>(cards[i-1]) && std::get<0>(cards[i]) == std::get<0>(cards[i-2]))
             {
-                num_pairs++;
-                order_of_cards.push(i);
-                order_of_cards.push(i-1);
+                pairs.push(cards[i]);
+                pairs.push(cards[i-1]);
+                pairs.push(cards[i-2]);
             }
         }
 
         // Empty the stacks.
-        while(!order_of_cards.empty()) order_of_cards.pop();
+        while(!pairs.empty()) pairs.pop();
         deck_ptr++;
 
     }
@@ -243,7 +327,7 @@ bool game::is_two_pairs(std::vector<hand> cards)
     iter hand_ptr = cards.begin();
     iter deck_ptr = cards.begin()+5;
 
-    std::stack<int> order_of_cards;
+    std::stack<hand> pairs;
     int num_pairs = 0;
 
     // Iterate through entire hand and deck.
@@ -251,52 +335,54 @@ bool game::is_two_pairs(std::vector<hand> cards)
     {
         // Sort cards in rank order.
         std::sort(cards.begin(),deck_ptr,compare_rank);
+        num_pairs = 0;
 
         // Iterate through the current set of cards.
         for(int  i = 1; i <= std::distance(cards.begin(),deck_ptr); i++)
         {
             if(num_pairs==2)
             {
-                // Add kicker cards.
-                if(order_of_cards.size()==4)
+                int max_index=0;
+                int count_hand_cards =0;
+
+                while(!pairs.empty())
                 {
-                    if(i>=6)
-                    {
-                        order_of_cards.push(i);
-                    }
-                    else
-                    {
-                        for(int j = 0; j <= 5; j++)
-                        {
-                            if(std::get<0>(cards[j])!=std::get<0>(cards[i]) && std::get<2>(cards[j])==HAND_CARD)
-                            {
-                                order_of_cards.push(j);
-                            } 
-                        }
-                    }
+                    int pos = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),pairs.top()));
+                    if(max_index < pos) max_index = pos;
+                    if(pos < 5) count_hand_cards++;
+                    pairs.pop();
                 }
-                
-                if(is_valid_final_hand(cards,order_of_cards,original_cards))
-                { 
+
+                if((max_index-4) + count_hand_cards == 5)
+                {
                     return true;
-                }   
+                }
+
             }
+            
             if(std::get<0>(cards[i]) == std::get<0>(cards[i-1]))
             {
                 num_pairs++;
-                order_of_cards.push(i);
-                order_of_cards.push(i-1);
+                pairs.push(cards[i]);
+                pairs.push(cards[i-1]);
             }
         }
 
         // Empty the stacks.
-        while(!order_of_cards.empty()) order_of_cards.pop();
+        while(!pairs.empty()) pairs.pop();
         deck_ptr++;
 
     }
     return false;
 };
 
+/**
+ * @brief Checks if the current hand can be a one pair hand.
+ * 
+ * @param cards 
+ * @return true 
+ * @return false 
+ */
 bool game::is_one_pair(std::vector<hand> cards)
 {
     std::vector<hand> original_cards = cards;
@@ -305,8 +391,6 @@ bool game::is_one_pair(std::vector<hand> cards)
     iter hand_ptr = cards.begin();
     iter deck_ptr = cards.begin()+5;
 
-    std::stack<int> order_of_cards;
-
     // Iterate through entire hand and deck.
     while(deck_ptr != cards.end()+1)
     {
@@ -316,50 +400,34 @@ bool game::is_one_pair(std::vector<hand> cards)
         // Iterate through the current set of cards.
         for(int  i = 1; i <= std::distance(cards.begin(),deck_ptr); i++)
         {
+            // If a pair exists in rank.
             if(std::get<0>(cards[i]) == std::get<0>(cards[i-1]))
             {
-                order_of_cards.push(i);
-                order_of_cards.push(i-1);
+                // Check to make sure that if the 5th card from the deck is taken, no cards in the pair are from the original hand.
+                int first_card = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),cards[i]));
+                int second_card = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),cards[i-1]));
 
-                // Add kicker cards.
-                if(order_of_cards.size()==2)
+                if(std::max(first_card,second_card) == 9 && std::min(first_card,second_card)<5)
                 {
-                    if(i>=6)
-                    {
-                        order_of_cards.push(i);
-                    }
-                    else
-                    {
-                        for(int j = 0; j <= 5; j++)
-                        {
-                            if(std::get<0>(cards[j])!=std::get<0>(cards[i]) && std::get<2>(cards[j])==HAND_CARD)
-                            {
-                                order_of_cards.push(j);
-                                break;
-                            } 
-                        }
-                    }
+                    return false;
                 }
-                if(is_valid_final_hand(cards,order_of_cards,original_cards))
-                { 
-                    return true;
-                }   
+
+                // Cards has one pair.
+                return true;
             }
         }
-
-        // Empty the stacks.
-        while(!order_of_cards.empty()) order_of_cards.pop();
         deck_ptr++;
-
     }
     return false;
 };
 
-bool game::is_full_house(std::vector<hand> cards)
-{
-    return false;
-};
-
+/**
+ * @brief Checks if hand is a four of a kind hand.
+ * 
+ * @param cards 
+ * @return true 
+ * @return false 
+ */
 bool game::is_four_of_a_kind(std::vector<hand> cards)
 {
     std::vector<hand> original_cards = cards;
@@ -430,6 +498,13 @@ bool game::is_four_of_a_kind(std::vector<hand> cards)
     return false;
 }
 
+/**
+ * @brief Checks if the hand is a straight flush.
+ * 
+ * @param cards 
+ * @return true 
+ * @return false 
+ */
 bool game::is_straight_flush(std::vector<hand> cards)
 {
     std::vector<hand> original_cards = cards;
@@ -521,18 +596,25 @@ bool game::is_straight_flush(std::vector<hand> cards)
     return false;
 }
 
-bool game::is_valid_final_hand(const std::vector<hand> final_hand, std::stack<int> suit_stack, const std::vector<hand> original_cards)
+/**
+ * @brief Performs a check to make sure that # of cards from original hand and # of cards from deck equal 5.
+ * 
+ * @param final_hand 
+ * @param suit_stack 
+ * @param original_cards 
+ * @return true 
+ * @return false 
+ */
+bool game::is_valid_final_hand(const std::vector<hand> final_hand, std::stack<int> suit_stack,std::vector<hand> original_cards)
 {
     int cards_from_hand = 0;
     int cards_from_deck = 0;
 
     int max_index=0;
-    int min_index=10;
-    int max_cards_to_draw;
+    int count_hand_cards=0;
     
     while(!suit_stack.empty())
     { 
-//        std::cout<<std::get<0>(final_hand[suit_stack.top()])<<std::get<1>(final_hand[suit_stack.top()])<<" H"<<suit_stack.top()<<std::endl;
         if(std::get<2>(final_hand[suit_stack.top()]) == HAND_CARD)
         {
             cards_from_hand++;
@@ -542,14 +624,14 @@ bool game::is_valid_final_hand(const std::vector<hand> final_hand, std::stack<in
             cards_from_deck++;
         }
 
-        if(max_index<suit_stack.top()) max_index=suit_stack.top();
-        if(min_index>suit_stack.top()) min_index=suit_stack.top();
+        int pos = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),final_hand[suit_stack.top()]));
+        if(max_index < pos) max_index = pos;
+        if(pos < 5) count_hand_cards++;
+
         suit_stack.pop();
     }
-    std::cout << "min " <<std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),final_hand[max_index])) << "max " << std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),final_hand[min_index]))<<std::endl;
-    max_cards_to_draw =std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),final_hand[max_index])) - std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),final_hand[min_index]))+1;
-    std::cout<<"max : "<<max_cards_to_draw<<std::endl;
-    if((max_cards_to_draw-cards_from_hand)+cards_from_deck==5)
+
+    if((max_index-4) + count_hand_cards == 5)
     {
         return true;
     }
@@ -576,6 +658,14 @@ bool game::is_valid_sequential_stack(const std::vector<hand> final_hand, std::st
     return true;
 }
 
+/**
+ * @brief Checks if two ranks are in sequential order where a < b.
+ * 
+ * @param a
+ * @param b 
+ * @return true 
+ * @return false 
+ */
 bool game::is_sequential(const char a, const char b)
 {
     if(a=='A') return false;
@@ -604,14 +694,31 @@ bool game::is_sequential(const char a, const char b)
     }
 };
 
+/**
+ * @brief Comparator function for ordering a pair of cards by suit.
+ * 
+ * @param one 
+ * @param two 
+ * @return true 
+ * @return false 
+ */
 bool game::compare_suit(const hand &one, const hand &two)
 {
+    // Implicit casting.
     int a = std::get<1>(one);
     int b = std::get<1>(two);
 
     return a > b;
 }
 
+/**
+ * @brief Comparator function for ordering a pair of cards by rank.
+ * 
+ * @param one 
+ * @param two 
+ * @return true 
+ * @return false 
+ */
 bool game::compare_rank(const hand &one, const hand &two)
 {
     char a = std::get<0>(one);
@@ -664,15 +771,6 @@ bool game::compare_rank(const hand &one, const hand &two)
     
     else
     {
-        // if(!isalpha(a) && isalpha(b))
-        // {
-        //     return true;
-        // }
-        // else if(isalpha(a) && !isalpha(b))
-        // {
-        //     return false;
-        // }
-        
         return (a-'0') < (b-'0');
     }
 };

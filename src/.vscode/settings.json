@@ -26,6 +26,8 @@
         "ios": "cpp",
         "chrono": "cpp",
         "limits": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "__tree": "cpp",
+        "set": "cpp"
     }
 }

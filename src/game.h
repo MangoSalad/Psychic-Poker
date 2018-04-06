@@ -54,21 +54,21 @@ private:
     std::vector<std::vector<std::string> > m_deck;
     
     // Checks if hand is straight flush.
-    bool is_straight_flush(const std::vector<hand> cards);
+    bool is_straight_flush(std::vector<hand> cards);
 
-    bool is_four_of_a_kind(const std::vector<hand> cards);
+    bool is_four_of_a_kind(std::vector<hand> cards);
 
-    bool is_full_house(const std::vector<hand> cards);
+    bool is_full_house(std::vector<hand> cards);
     
-    bool is_flush(const std::vector<hand> cards);
+    bool is_flush(std::vector<hand> cards);
 
-    bool is_straight(const std::vector<hand> cards);
+    bool is_straight(std::vector<hand> cards);
 
-    bool is_three_of_a_kind(const std::vector<hand> cards);
+    bool is_three_of_a_kind(std::vector<hand> cards);
 
-    bool is_two_pairs(const std::vector<hand> cards);
+    bool is_two_pairs(std::vector<hand> cards);
 
-    bool is_one_pair(const std::vector<hand> cards);
+    bool is_one_pair(std::vector<hand> cards);
 
     // Utility functions.
     static bool compare_rank(const hand &one, const hand &two);
