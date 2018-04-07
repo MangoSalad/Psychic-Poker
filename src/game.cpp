@@ -44,6 +44,9 @@ game::game(std::vector<std::vector<std::string> > a_input)
  */
 void game::show_input()
 {
+    std::cout<<"Input"<<std::endl;
+    std::cout<<"======================================"<<std::endl;
+    
     for(int i=0; i<m_input.size(); i++)
     {
         for(int j=0; j<m_input[0].size(); j++)
@@ -52,6 +55,7 @@ void game::show_input()
         }
         std::cout << std::endl;
     }
+
 };
 
 /**
@@ -60,6 +64,9 @@ void game::show_input()
  */
 void game::show_output()
 {
+    std::cout<<"Output"<<std::endl;
+    std::cout<<"======================================"<<std::endl;
+
     for(int i=0; i<m_input.size()-1; i++)
     {
         for(int j=0; j<m_input[0].size(); j++)
@@ -68,6 +75,8 @@ void game::show_output()
         }
         std::cout << m_best_hand[i] << std::endl;
     }
+
+    std::cout<<"======================================"<<std::endl;
 };
 
 /**
@@ -279,11 +288,10 @@ bool game::is_straight(std::vector<hand> cards)
     std::stack<hand> sequential_cards;
 
     // Iterate through entire hand and deck.
-    while(deck_ptr != cards.end()+1)
+    while(deck_ptr != cards.end())
     {
         // Sort cards in rank order.
         std::sort(cards.begin(),deck_ptr,compare_rank);
-        sequential_cards.push(cards[0]);
 
         // Iterate through the current set of cards.
         for(int  i = 1; i <= std::distance(cards.begin(),deck_ptr); i++)
@@ -312,7 +320,16 @@ bool game::is_straight(std::vector<hand> cards)
 
             }
             
-            if(is_sequential(std::get<0>(cards[i-1]),std::get<0>(cards[i])))
+            if(!sequential_cards.empty() && std::get<0>(sequential_cards.top())<=5 && std::get<0>(cards[i]) == 'A')
+            {
+                sequential_cards.push(cards[i]);
+            }
+            else if(std::get<0>(cards[0]) == '2' && std::get<0>(cards[i]) == 'A' && std::get<0>(sequential_cards.top())!='A')
+            {
+                sequential_cards.push(cards[i]);
+            }
+
+            if(is_sequential(std::get<0>(cards[i-1]),std::get<0>(cards[i])) && (sequential_cards.empty() || is_sequential(std::get<0>(sequential_cards.top()),std::get<0>(cards[i-1]))))
             {
                 if(sequential_cards.empty())
                 {
@@ -326,6 +343,7 @@ bool game::is_straight(std::vector<hand> cards)
         deck_ptr++;
 
     }
+
     return false;
 };
 
@@ -736,15 +754,20 @@ bool game::is_sequential(const char a, const char b)
     else if(a=='J' && b=='Q') return true;
     else if(a=='T' && b=='J') return true;
     else if(a=='9' && b=='T') return true;
+    else if(a=='2' && b=='A') return true;
     else 
     {
         try
         {
-            if(isalpha(a) || isalpha(b))
-            {
-                return false;
-            }
-            else if( (b-'0') - (a-'0') == 1)
+            // if(isalpha(a) || !isalpha(b))
+            // {
+            //     return true;
+            // }
+            // else if (!isalpha(a) && isalpha(b))
+            // {
+            //     return false;
+            // }
+            if( (b-'0') - (a-'0') == 1)
             {
                 return true;
             }

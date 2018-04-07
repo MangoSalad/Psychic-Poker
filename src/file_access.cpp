@@ -29,7 +29,6 @@ bool file_access::load_file()
     {
         getline(in_file, buff);
         std::istringstream line(buff);
-        std::cout<<buff<<std::endl;
 
         while(line)
         {
