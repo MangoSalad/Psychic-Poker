@@ -142,7 +142,7 @@ bool game::is_straight_flush(std::vector<hand> cards)
     std::vector<hand> original_cards = cards;
     
     // Iterator for going through hand and deck cards.
-    std::vector<hand>::iterator deck_ptr = cards.begin()+6;
+    iter deck_ptr = cards.begin()+5;
 
     // Stacks for each suit.
     std::stack<int> count_heart;
@@ -243,7 +243,7 @@ bool game::is_four_of_a_kind(std::vector<hand> cards)
     std::vector<hand> original_cards = cards;
 
     // Iterator for going through hand and deck cards.
-    iter deck_ptr = cards.begin()+6;
+    iter deck_ptr = cards.begin()+5;
 
     // Number of cards with the same rank. Stack will be used for pushing cards that are the same rank.
     std::stack<hand> order_of_cards;
@@ -262,7 +262,7 @@ bool game::is_four_of_a_kind(std::vector<hand> cards)
             {
                 if(is_valid_final_Hand(original_cards,order_of_cards)) return true;
             }
-            
+                        
             // If the last 4 cards have the same rank, push them onto the stack.
             if( std::get<0>(cards[i]) == std::get<0>(cards[i-1]) && 
                 std::get<0>(cards[i]) == std::get<0>(cards[i-2]) &&
@@ -296,7 +296,7 @@ bool game::is_full_house(std::vector<hand> cards)
     std::vector<hand> original_cards = cards;
 
     // Iterator for going through hand and deck cards.
-    iter deck_ptr = cards.begin()+6;
+    iter deck_ptr = cards.begin()+5;
 
     // Number of cards with the same rank.
     std::stack<hand> order_of_cards;
@@ -365,7 +365,7 @@ bool game::is_flush(std::vector<hand> cards)
     std::vector<hand> original_cards = cards;
 
     // Iterators for going through hand and deck cards.
-    iter deck_ptr = cards.begin()+6;
+    iter deck_ptr = cards.begin()+5;
 
     std::stack<hand> same_suit;
 
@@ -424,7 +424,7 @@ bool game::is_straight(std::vector<hand> cards)
     std::vector<hand> original_cards = cards;
 
     // Iterators for going through hand and deck cards.
-    iter deck_ptr = cards.begin()+6;
+    iter deck_ptr = cards.begin()+5;
 
     // Stack of sequential cards.
     std::stack<hand> sequential_cards;
@@ -445,25 +445,25 @@ bool game::is_straight(std::vector<hand> cards)
             }
             
             // Account that A,2,3,4,5 is sequential. Sorting algorithm sorts cars with 'A' being the highest valued card, sort will result in '2','3','A'
-            if(!sequential_cards.empty() && std::get<0>(sequential_cards.top())<=5 && std::get<0>(cards[i]) == 'A')
-            {
-                sequential_cards.push(cards[i]);
-            }
-            else if(std::get<0>(cards[0]) == '2' && std::get<0>(cards[i]) == 'A' && std::get<0>(sequential_cards.top())!='A')
+            if(sequential_cards.size()==4 && std::get<0>(sequential_cards.top())=='5' && std::get<0>(cards[i]) == 'A')
             {
                 sequential_cards.push(cards[i]);
             }
 
-            // Using is_sequential utility function to abstract comparison between a and b.
-            if(is_sequential(std::get<0>(cards[i-1]),std::get<0>(cards[i])) && (sequential_cards.empty() || is_sequential(std::get<0>(sequential_cards.top()),std::get<0>(cards[i-1]))))
+            // Check if first and second cards are sequential.   
+            else if(sequential_cards.empty() && is_sequential(std::get<0>(cards[i-1]),std::get<0>(cards[i])))
             {
-                if(sequential_cards.empty())
-                {
-                    sequential_cards.push(cards[i-1]);
-                }
+                sequential_cards.push(cards[i-1]); 
+                sequential_cards.push(cards[i]);
+            }
+            
+            // Using is_sequential utility function to abstract comparison between a and b.
+            else if(!sequential_cards.empty() && is_sequential(std::get<0>(cards[i-1]),std::get<0>(cards[i])) && std::get<0>(sequential_cards.top()) == std::get<0>(cards[i-1]))
+            {
                 sequential_cards.push(cards[i]);
             }
         }
+        
         // Empty the stacks.
         while(!sequential_cards.empty()) sequential_cards.pop();
         deck_ptr++;
@@ -485,7 +485,7 @@ bool game::is_three_of_a_kind(std::vector<hand> cards)
     std::vector<hand> original_cards = cards;
 
     // Iterators for going through hand and deck cards.
-    iter deck_ptr = cards.begin()+6;
+    iter deck_ptr = cards.begin()+5;
 
     std::stack<hand> pairs;
 
@@ -533,7 +533,7 @@ bool game::is_two_pairs(std::vector<hand> cards)
     std::vector<hand> original_cards = cards;
 
     // Iterators for going through hand and deck cards.
-    iter deck_ptr = cards.begin()+6;
+    iter deck_ptr = cards.begin()+5;
 
     std::stack<hand> pairs;
     int num_pairs = 0;
@@ -550,21 +550,7 @@ bool game::is_two_pairs(std::vector<hand> cards)
         {
             if(num_pairs==2)
             {
-                int max_index=0;
-                int count_hand_cards =0;
-
-                while(!pairs.empty())
-                {
-                    int pos = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),pairs.top()));
-                    if(max_index < pos) max_index = pos;
-                    if(pos < 5) count_hand_cards++;
-                    pairs.pop();
-                }
-
-                if((max_index-4) + count_hand_cards == 5)
-                {
-                    return true;
-                }
+                if(is_valid_final_Hand(original_cards,pairs)) return true;
 
             }
             
@@ -660,6 +646,11 @@ bool game::is_valid_final_Hand(std::vector<hand> original_cards, std::stack<hand
     {
         return true;
     }
+    // If there are not 5 cards, check that there are not more original cards than they are allowed to be given how many cards drawn from the deck.
+    else if(9-deck_index >= count_hand_cards)
+    {
+        return true;
+    }
     else
     {
         return false;
@@ -721,18 +712,25 @@ bool game::is_valid_final_hand(const std::vector<hand> final_hand, std::stack<in
  */
 bool game::is_valid_sequential_stack(const std::vector<hand> final_hand, std::stack<int> suit_stack)
 {
-    char last_card = std::get<0>(final_hand[suit_stack.top()]); 
-    suit_stack.pop();
+    std::vector<hand> cards;
+
 
     while(!suit_stack.empty())
     {   
-        if(!is_sequential(std::get<0>(final_hand[suit_stack.top()]),last_card))
-        {
-            return false;
-        } 
-        last_card = std::get<0>(final_hand[suit_stack.top()]); 
+        cards.push_back(final_hand[suit_stack.top()]);
         suit_stack.pop();
     }
+
+    std::sort(cards.begin(),cards.end(),compare_rank);
+
+    for(int i = 1; i < cards.size(); i++)
+    {
+        if(!is_sequential(std::get<0>(cards[i-1]),std::get<0>(cards[i])))
+        {
+            return false;
+        }
+    }
+
     return true;
 };
 
@@ -746,7 +744,7 @@ bool game::is_valid_sequential_stack(const std::vector<hand> final_hand, std::st
  */
 bool game::is_sequential(const char a, const char b)
 {
-    if(a=='A' && b == 'K') return true;
+    if(a=='A' && b == '2') return true;
     else if(a=='K' && b=='A') return true;
     else if(a=='Q' && b=='K') return true;
     else if(a=='J' && b=='Q') return true;
@@ -757,6 +755,10 @@ bool game::is_sequential(const char a, const char b)
     {
         try
         {
+            if(!isalpha(a) && isalpha(b))
+            {
+                return true;
+            }
             if( (b-'0') - (a-'0') == 1)
             {
                 return true;
