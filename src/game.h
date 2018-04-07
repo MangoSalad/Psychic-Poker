@@ -68,6 +68,7 @@ private:
 
     // Checks if the final best available hand is valid. Checks that deck's ordered property is maintained.
     bool is_valid_final_hand(const std::vector<hand> final_hand, std::stack<int> suit_stack, const std::vector<hand> original_cards);
+    bool is_valid_final_Hand(std::vector<hand> original_cards, std::stack<hand> final_Cards );
     bool is_valid_sequential_stack(const std::vector<hand> final_hand, std::stack<int> suit_stack);
 };
 
