@@ -243,10 +243,17 @@ bool game::is_straight_flush(std::vector<hand> cards)
     return false;
 };
 
+/**
+ * @brief Creates vector holding cards to discard when final hand is straight flush. Adds to m_cards_to_discard queue.
+ * 
+ * @param suit 
+ * @param original_cards 
+ */
 void game::set_cards_to_discard_straight_flush(char suit,std::vector<hand> original_cards)
 {
     std::vector<hand> cards_to_discard;
   
+    // Check if card does not match quit, then discard card.
     for(int i = 0; i < 5; i++)
     {
         if(std::get<1>(original_cards[i]) != suit)
@@ -255,20 +262,29 @@ void game::set_cards_to_discard_straight_flush(char suit,std::vector<hand> origi
         }
     }
 
+    // Add to queue.
     m_cards_to_discard.push(cards_to_discard);
 }
 
+/**
+ * @brief Creates vector holding cards to discard. Adds to m_cards_to_discard queue.
+ * 
+ * @param suit 
+ * @param original_cards 
+ */
 void game::set_cards_to_discard(std::stack<hand> final_cards,std::vector<hand> original_cards)
 {
     std::vector<hand> cards_to_discard;
     std::vector<hand> final_cards_vector;
 
+    // Turn stack into vector. Given that most hands use stack as card hand, will have to do this.
     while(!final_cards.empty())
     {
         final_cards_vector.push_back(final_cards.top());
         final_cards.pop();
     }
 
+    // Check that original card hand is not in final hand, then discard.
     for(int i = 0; i < 5; i++)
     {
         if(std::find(final_cards_vector.begin(), final_cards_vector.end(),original_cards[i]) == final_cards_vector.end())
@@ -277,6 +293,7 @@ void game::set_cards_to_discard(std::stack<hand> final_cards,std::vector<hand> o
         }
     }
 
+    // Add to queue.
     m_cards_to_discard.push(cards_to_discard);
 }
 /**
@@ -694,6 +711,13 @@ bool game::is_one_pair(std::vector<hand> cards)
     return false;
 };
 
+/**
+ * @brief Finds the highest card in the hand.
+ * 
+ * @param cards 
+ * @return true 
+ * @return false 
+ */
 bool game::is_highest_card(std::vector<hand> cards)
 {
     std::vector<hand> original_cards = cards;
