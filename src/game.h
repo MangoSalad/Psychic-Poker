@@ -48,7 +48,12 @@ private:
     // Input 2d matrix.
     std::vector<std::vector<hand> > m_input;
     std::vector<std::string> m_best_hand;
-    
+
+    // Cards to discord
+    std::queue<std::vector<hand> > m_cards_to_discard;
+    void set_cards_to_discard(std::stack<hand>,std::vector<hand>);
+    void set_cards_to_discard_straight_flush(char suit,std::vector<hand> original_cards);
+
     // Checks if a given hand can match the following best hands:
     bool is_straight_flush(std::vector<hand> cards);
     bool is_four_of_a_kind(std::vector<hand> cards);
@@ -58,6 +63,7 @@ private:
     bool is_three_of_a_kind(std::vector<hand> cards);
     bool is_two_pairs(std::vector<hand> cards);
     bool is_one_pair(std::vector<hand> cards);
+    bool is_highest_card(std::vector<hand> cards);
 
     // Utility functions. Comprator functions used for sorting.
     static bool compare_rank(const hand &one, const hand &two);

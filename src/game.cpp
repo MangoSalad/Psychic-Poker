@@ -70,9 +70,18 @@ void game::show_output()
     {
         for(int j=0; j<m_input[0].size(); j++)
         {
-            std::cout << std::get<0>(m_input[i][j]) << std::get<1>(m_input[i][j]) << " ";
+            std::cout << std::setw(0) << std::get<0>(m_input[i][j]) << std::get<1>(m_input[i][j]) << " ";
         }
-        std::cout << m_best_hand[i] << std::endl;
+        std::cout << std::setw(30) <<std::left << m_best_hand[i] << std::setw(10) << std::left << "Cards to discard: ";
+
+        for(int j=0; j<m_cards_to_discard.front().size(); j++)
+        {
+            std::cout << std::get<0>(m_cards_to_discard.front()[j]) << std::get<1>(m_cards_to_discard.front()[j]) << " ";
+        }
+
+        if(!m_cards_to_discard.empty()) m_cards_to_discard.pop();
+
+        std::cout << std::endl;
     }
 
     std::cout<<"======================================"<<std::endl;
@@ -93,7 +102,6 @@ void game::calculate_best_hand()
         {
             m_best_hand[i]=STRAIGHT_FLUSH;
         }
-        //needs work.
         else if(is_four_of_a_kind(m_input[i]))
         {
             m_best_hand[i]=FOUR_OF_A_KIND;
@@ -122,7 +130,7 @@ void game::calculate_best_hand()
         {
             m_best_hand[i]=ONE_PAIR;
         }
-        else
+        else if(is_highest_card(m_input[i]))
         {
             m_best_hand[i]=HIGHEST_CARD;
         }
@@ -170,7 +178,9 @@ bool game::is_straight_flush(std::vector<hand> cards)
                     if(is_valid_sequential_stack(cards,count_heart))
                     {
                         if(is_valid_final_hand(cards,count_heart,original_cards))
-                        { 
+                        {
+                            // Cards to discard.
+                            set_cards_to_discard_straight_flush('H',original_cards);
                             return true;
                         }
                     }
@@ -182,6 +192,7 @@ bool game::is_straight_flush(std::vector<hand> cards)
                     {
                         if(is_valid_final_hand(cards,count_diamond,original_cards))
                         { 
+                            set_cards_to_discard_straight_flush('D',original_cards);
                             return true;
                         }
                     }
@@ -193,6 +204,7 @@ bool game::is_straight_flush(std::vector<hand> cards)
                     {
                         if(is_valid_final_hand(cards,count_club,original_cards))
                         {
+                            set_cards_to_discard_straight_flush('C',original_cards);
                             return true;
                         }
                     }
@@ -204,6 +216,7 @@ bool game::is_straight_flush(std::vector<hand> cards)
                     {
                         if(is_valid_final_hand(cards,count_spade,original_cards))
                         {
+                            set_cards_to_discard_straight_flush('S',original_cards);
                             return true;
                         }
                     } 
@@ -230,6 +243,42 @@ bool game::is_straight_flush(std::vector<hand> cards)
     return false;
 };
 
+void game::set_cards_to_discard_straight_flush(char suit,std::vector<hand> original_cards)
+{
+    std::vector<hand> cards_to_discard;
+  
+    for(int i = 0; i < 5; i++)
+    {
+        if(std::get<1>(original_cards[i]) != suit)
+        {
+            cards_to_discard.push_back(original_cards[i]);
+        }
+    }
+
+    m_cards_to_discard.push(cards_to_discard);
+}
+
+void game::set_cards_to_discard(std::stack<hand> final_cards,std::vector<hand> original_cards)
+{
+    std::vector<hand> cards_to_discard;
+    std::vector<hand> final_cards_vector;
+
+    while(!final_cards.empty())
+    {
+        final_cards_vector.push_back(final_cards.top());
+        final_cards.pop();
+    }
+
+    for(int i = 0; i < 5; i++)
+    {
+        if(std::find(final_cards_vector.begin(), final_cards_vector.end(),original_cards[i]) == final_cards_vector.end())
+        {
+            cards_to_discard.push_back(original_cards[i]);
+        }
+    }
+
+    m_cards_to_discard.push(cards_to_discard);
+}
 /**
  * @brief Checks if hand is a four of a kind hand. Does so by sorting the list of cards in rank order. If there is an occurence where the cards are the same rank, then it is a four of a kind. 
  * 
@@ -260,7 +309,11 @@ bool game::is_four_of_a_kind(std::vector<hand> cards)
             // If there are 4 cards with the same rank.
             if(order_of_cards.size()==4)
             {
-                if(is_valid_final_Hand(original_cards,order_of_cards)) return true;
+                if(is_valid_final_Hand(original_cards,order_of_cards)) 
+                {
+                    set_cards_to_discard(order_of_cards,original_cards);
+                    return true;
+                }
             }
                         
             // If the last 4 cards have the same rank, push them onto the stack.
@@ -313,7 +366,11 @@ bool game::is_full_house(std::vector<hand> cards)
             // Stack is filled.
             if(order_of_cards.size()==5)
             {
-                if(is_valid_final_Hand(original_cards,order_of_cards)) return true;
+                if(is_valid_final_Hand(original_cards,order_of_cards))
+                {
+                    set_cards_to_discard(order_of_cards,original_cards);
+                    return true;
+                }
             }
             
             // Last 3 cards are equal in rank.
@@ -381,7 +438,11 @@ bool game::is_flush(std::vector<hand> cards)
             // If the stack is filled with 5 cards of the same suit, then its a flush.
             if(same_suit.size()==5)
             {
-                if(is_valid_final_Hand(original_cards,same_suit)) return true;
+                if(is_valid_final_Hand(original_cards,same_suit))
+                {
+                    set_cards_to_discard(same_suit,original_cards);
+                    return true;
+                }
             }
             
             // If suit matches last suit, push onto the stack.
@@ -441,7 +502,11 @@ bool game::is_straight(std::vector<hand> cards)
             // If there is 5 sequential cards.
             if(sequential_cards.size()==5)
             {
-                if(is_valid_final_Hand(original_cards,sequential_cards)) return true;
+                if(is_valid_final_Hand(original_cards,sequential_cards))
+                {
+                    set_cards_to_discard(sequential_cards,original_cards);
+                    return true;
+                }
             }
             
             // Account that A,2,3,4,5 is sequential. Sorting algorithm sorts cars with 'A' being the highest valued card, sort will result in '2','3','A'
@@ -500,7 +565,11 @@ bool game::is_three_of_a_kind(std::vector<hand> cards)
         {
             if(pairs.size()==3)
             {
-                if(is_valid_final_Hand(original_cards,pairs)) return true;
+                if(is_valid_final_Hand(original_cards,pairs))
+                {
+                    set_cards_to_discard(pairs,original_cards); 
+                    return true;
+                }
 
             }
             
@@ -550,7 +619,11 @@ bool game::is_two_pairs(std::vector<hand> cards)
         {
             if(num_pairs==2)
             {
-                if(is_valid_final_Hand(original_cards,pairs)) return true;
+                if(is_valid_final_Hand(original_cards,pairs))
+                {
+                    set_cards_to_discard(pairs,original_cards); 
+                    return true;
+                }
 
             }
             
@@ -607,12 +680,46 @@ bool game::is_one_pair(std::vector<hand> cards)
                 }
 
                 // Cards has one pair.
+                std::stack<hand> final_pair;
+                final_pair.push(cards[i]);
+                final_pair.push(cards[i-1]);
+                
+                set_cards_to_discard(final_pair,original_cards);
+
                 return true;
             }
         }
         deck_ptr++;
     }
     return false;
+};
+
+bool game::is_highest_card(std::vector<hand> cards)
+{
+    std::vector<hand> original_cards = cards;
+    
+    // Sort cards in rank order.
+    std::sort(cards.begin(),cards.end(),compare_rank);
+
+    int max_card = std::distance(original_cards.begin(),std::find(original_cards.begin(),original_cards.end(),cards[cards.size()-1]));
+
+    if(max_card < 5)
+    {
+        m_cards_to_discard.push({});
+        return true;
+    }
+    else
+    {
+        std::vector<hand> final_hand;
+
+        for(int i = 0; i < max_card - 5; i++)
+        {    
+            final_hand.push_back(original_cards[i]);
+        }
+        
+        m_cards_to_discard.push({final_hand});
+        return true;
+    }    
 };
 
 /**
